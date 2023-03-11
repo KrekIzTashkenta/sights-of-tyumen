@@ -49,7 +49,7 @@ class MainMenuActivity : AppCompatActivity(), UserLocationObjectListener, Sessio
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        MapKitFactory.setApiKey("api key")
+        MapKitFactory.setApiKey("c18b5cf8-3c97-4207-8a63-6d5d061ba136")
         MapKitFactory.initialize(this)
         setContentView(R.layout.activity_main_menu)
         mapView = findViewById(R.id.mapview)
@@ -59,7 +59,7 @@ class MainMenuActivity : AppCompatActivity(), UserLocationObjectListener, Sessio
         )
 
         var mapkit:MapKit = MapKitFactory.getInstance()
-        requestLocatePermission()
+        requstLocationPermission()
         var probki = mapkit.createTrafficLayer(mapView.mapWindow)
         probki.isTrafficVisible = false
         var locationOnMapkit = mapkit.createUserLocationLayer(mapView.mapWindow)
@@ -78,6 +78,7 @@ class MainMenuActivity : AppCompatActivity(), UserLocationObjectListener, Sessio
         locationMapKit = mapkit.createUserLocationLayer(mapView.mapWindow)
         locationMapKit.isVisible = true
         locationMapKit.setObjectListener(this)
+
         SearchFactory.initialize(this)
         searchManager = SearchFactory.getInstance().createSearchManager(SearchManagerType.COMBINED)
         mapView.map.addCameraListener(this)
@@ -90,14 +91,13 @@ class MainMenuActivity : AppCompatActivity(), UserLocationObjectListener, Sessio
         }
     }
 
-    private fun requestLocatePermission(){
+    private fun requstLocationPermission(){
         if(ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)!= PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)!= PackageManager.PERMISSION_GRANTED){
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION),0)
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)!= PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION), 0)
             return
         }
     }
-
 
     override fun onStop() {
         mapView.onStop()
@@ -112,32 +112,58 @@ class MainMenuActivity : AppCompatActivity(), UserLocationObjectListener, Sessio
     }
 
     override fun onObjectAdded(userLocationView: UserLocationView) {
+        locationMapKit.setAnchor(
+            PointF((mapView.width() * 0.5).toFloat(), (mapView.height() * 0.5).toFloat()),
+            PointF((mapView.width() * 0.5).toFloat(), (mapView.height() * 0.83).toFloat())
+        )
+        userLocationView.arrow.setIcon(ImageProvider.fromResource(this, R.drawable.navigator))
 
+        val picIcon = userLocationView.pin.useCompositeIcon()
+        picIcon.setIcon("recycling", ImageProvider.fromResource(this, R.drawable.recycling),
+            IconStyle().setRotationType(RotationType.ROTATE).setZIndex(0f).setScale(1f)
+        )
+        picIcon.setIcon("pin", ImageProvider.fromResource(this, R.drawable.nothing),
+        IconStyle().setAnchor(PointF(0.5f, 0.5f)).setRotationType(RotationType.ROTATE).setZIndex(1f).setScale(0.5f))
+        userLocationView.accuracyCircle.fillColor = Color.BLUE and -0x66000001
     }
 
     override fun onObjectRemoved(p0: UserLocationView) {
-        TODO("Not yet implemented")
     }
 
     override fun onObjectUpdated(p0: UserLocationView, p1: ObjectEvent) {
-        TODO("Not yet implemented")
     }
 
-    override fun onSearchResponse(p0: Response) {
-        TODO("Not yet implemented")
+    override fun onSearchResponse(response: Response) {
+        val mapObjects:MapObjectCollection = mapView.map.mapObjects
+        mapObjects.clear()
+        for (searchResult in response.collection.children){
+            val resultLocation = searchResult.obj!!.geometry[0].point!!
+            if (response != null){
+                mapObjects.addPlacemark(resultLocation, ImageProvider.fromResource(this, R.drawable.placeholder))
+            }
+        }
     }
 
-    override fun onSearchError(p0: Error) {
-        TODO("Not yet implemented")
+    override fun onSearchError(error: Error) {
+        var errorMessage = "Неизвестная ошибка!"
+        if (error is RemoteError){
+            errorMessage = "Фатальная ошибка!"
+        }
+        else if (error is NetworkError){
+            errorMessage = "Проблемы с интернетом!"
+        }
+        Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show()
     }
 
     override fun onCameraPositionChanged(
-        p0: Map,
-        p1: CameraPosition,
-        p2: CameraUpdateReason,
-        p3: Boolean
+        map: Map,
+        cameraPosition: CameraPosition,
+        cameraUpdateReason: CameraUpdateReason,
+        finished: Boolean
     ) {
-        TODO("Not yet implemented")
+        if (finished){
+            sumbitQuery(searchEdit.text.toString())
+        }
     }
 
 }

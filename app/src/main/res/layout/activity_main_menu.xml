@@ -42,6 +42,7 @@
 
         <Button
             android:id="@+id/probkiBoutton"
+            android:text="П"
             android:background="@drawable/simplegreen"
             android:layout_marginEnd="-10dp"
             android:layout_marginStart="-10dp"
