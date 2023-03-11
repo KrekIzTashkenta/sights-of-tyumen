@@ -2,10 +2,12 @@ package com.example.mapkittyumen
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.ContentValues.TAG
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.PointF
 import android.os.Bundle
+import android.util.Log
 import android.view.Display.Mode
 import android.view.View
 import android.view.inputmethod.EditorInfo
@@ -75,10 +77,29 @@ class MainMenuActivity : AppCompatActivity(), UserLocationObjectListener, Sessio
                 probkibut.setBackgroundResource(R.drawable.butoff)
             }
         }
+        //ловим исключение
+        /*
         locationMapKit = mapkit.createUserLocationLayer(mapView.mapWindow)
         locationMapKit.isVisible = true
         locationMapKit.setObjectListener(this)
+        SearchFactory.initialize(this)
+        searchManager = SearchFactory.getInstance().createSearchManager(SearchManagerType.COMBINED)
+        mapView.map.addCameraListener(this)
+        searchEdit = findViewById(R.id.search_field)
+        searchEdit.setOnEditorActionListener{ v, actionId, event ->
+            if(actionId == EditorInfo.IME_ACTION_SEARCH){
+                sumbitQuery(searchEdit.text.toString())
+            }
+            false
+        }*/
 
+        try {
+            locationMapKit = mapkit.createUserLocationLayer(mapView.mapWindow)
+            locationMapKit.isVisible = true
+            locationMapKit.setObjectListener(this)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error creating user location layer: ${e.message}")
+        }
         SearchFactory.initialize(this)
         searchManager = SearchFactory.getInstance().createSearchManager(SearchManagerType.COMBINED)
         mapView.map.addCameraListener(this)
